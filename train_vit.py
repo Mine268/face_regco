@@ -4,10 +4,10 @@ import einops
 
 from vit_pytorch import vit
 from data import FaceDataset
-from loss import TripletLoss
+from loss import TripletLoss, TripletCosLoss
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 
 def parse_args():
@@ -33,13 +33,13 @@ def train_net(args):
         num_classes=args.embd_dim,
         dim=1024,
         depth=16,
-        heads=16,
+        heads=8,
         mlp_dim=863,
     )
     model = model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
     
-    dataset = FaceDataset(args.data_path)
+    dataset = FaceDataset(args.data_path, train_ratio=1.0, input_shape=(3, 112, 112))
     dataset.train()
     dataloader = torch.utils.data.DataLoader(
         dataset,
@@ -48,7 +48,8 @@ def train_net(args):
         num_workers=4
     )
     
-    criterion = TripletLoss()
+    criterion = TripletLoss(margin=0.1)
+    # criterion = TripletCosLoss(margin=0.0)
     
     for epoch in range(args.epoches):
         train(model, dataloader, criterion, optim, epoch, device)
