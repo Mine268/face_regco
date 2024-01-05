@@ -44,7 +44,7 @@ with torch.no_grad():
                 elif torch.abs(s1 - s2) < 1e-5:
                     n += 0.5
             return n / len(dataset)
-        # print(auc(model, dataset))
+        print(auc(model, dataset))
         
     w = torch.load('./checkpoints/checkpoint_epoch=19.pth')
     model.load_state_dict(w)
