@@ -1,1 +1,0 @@
-python .\train_vit.py --data_path D:\study2\0-2023-2024-1\0-高级人工智能\小组项目\CCF-BDCI2019-Multi-person-Face-Recognition-Competition-Baseline\train_data\training --batch_size=16 --lr 0.0001

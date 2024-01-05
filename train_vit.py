@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=64, help="batch size")
     parser.add_argument("--epoches", type=int, default=100, help="epoches")
     parser.add_argument("--lr", type=float, default=0.00001, help="learning rate")
-    parser.add_argument("--embd_dim", type=int, default=512, help="embedding dimension")
+    parser.add_argument("--embd_dim", type=int, default=256, help="embedding dimension")
     parser.add_argument("--patch_size", type=int, default=16, help="patch size")
     
     args = parser.parse_args()
@@ -31,10 +31,10 @@ def train_net(args):
         image_size=(112, 112),
         patch_size=(args.patch_size, args.patch_size),
         num_classes=args.embd_dim,
-        dim=1024,
+        dim=400,
         depth=16,
         heads=8,
-        mlp_dim=863,
+        mlp_dim=340,
     )
     model = model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -48,7 +48,7 @@ def train_net(args):
         num_workers=4
     )
     
-    criterion = TripletLoss(margin=0.1)
+    criterion = TripletLoss(margin=1e-2).to(device)
     # criterion = TripletCosLoss(margin=0.0)
     
     for epoch in range(args.epoches):
@@ -68,7 +68,7 @@ def train(model, dataloader, criterion, optimizer, epoch, device):
         batch_anchor_emb, batch_positive_emb, batch_negative_emb = torch.chunk(embds, 3, dim=1)
         
         # Loss
-        loss = criterion(batch_anchor_emb, batch_positive_emb, batch_negative_emb)
+        loss, dis_pos, dis_neg = criterion(batch_anchor_emb, batch_positive_emb, batch_negative_emb)
         
         # Backward
         optimizer.zero_grad()
@@ -76,8 +76,8 @@ def train(model, dataloader, criterion, optimizer, epoch, device):
         optimizer.step()
         
         # Logging
-        if (i + 1) % 50 == 0:
-            print(f'Epoch[{epoch+1}][{i+1}/{len(dataloader)}], loss={loss.item()}')
+        if (i + 1) % 10 == 0:
+            print(f'Epoch[{epoch+1}][{i+1}/{len(dataloader)}], loss={loss.item()}, pd={dis_pos.mean().item()}, pn={dis_neg.mean().item()}')
             
 if __name__ == '__main__':
     args = parse_args()
